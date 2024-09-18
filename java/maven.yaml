@@ -1,0 +1,99 @@
+---
+parameters:
+  # - name: image
+  #   displayName: pool image
+  #   type: string
+  #   default: ubuntu-latest
+  #   values: 
+  #     - 'MySelfHostedPool'
+  #     - 'Default'
+  #     - 'ubuntu-latest'
+  - name: jdkVersionOption
+    displayName: Required java version 
+    type: string
+    default: '8'
+    values:
+      - '17'
+      - '11'
+      - '8'
+  - name: javaHomeOption
+    displayName: javaHomeSelection
+    type: string
+    default: 'path'
+    values:
+      - 'path'
+      - 'JDKVersion'
+  # - name: jdkSource
+  #   displayName: Required source path for java
+  #   type: string
+  #   default: 'JDKVersion'
+  #   values:
+  #     - 'PreInstalled'
+  #     - 'AzureStorage'
+  #     - 'LocalDirectory'
+  #     - 'JDKVersion'
+  - name: mavenPOMFile
+    displayName: Maven POM file
+    type: string
+    default: 'pom.xml'
+  - name: mavengoals
+    displayName:  compile your code
+    type: string
+    default: 'package'
+    values:
+      - validate
+      - compile
+      - test
+      - package
+      - verify
+      - install
+      - deploy
+  # - name: testResultsFormat
+  #   displayName: test results format
+  #   type: string
+  #   default: 'JUnit'
+  - name: testResultsFiles
+    displayName: test results file
+    type: string
+    default: '**/TEST-*.xml'
+    values:
+      - '**/surefire-reports/TEST-*.xml'
+      - '**/TEST-*.xml'
+
+trigger: none
+
+pool: 
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: maven
+    displayName: 'Install Java and build using maven'
+    jobs:
+      - job: mavenBuild
+        displayName: "Install java and build using maven"
+        steps:
+          # - task: JavaToolInstaller@0
+          #   inputs:
+          #     versionSpec: ${{ parameters.versionSpec }}
+          #     jdkArchitectureOption: 'x64'
+          #     jdkSourceOption: 'Pre-installed'
+
+          - task: Maven@4
+            inputs:
+              javaHomeOption: ${{ parameters.javaHomeOption }}
+              jdkVersionOption: ${{ parameters.jdkVersionOption }}
+              jdkArchitectureOption: x64
+              # jdkDirectory: '/usr/lib/jvm/java-${{ parameters.jdkVersionOption }}-openjdk-amd64'
+              mavenPOMFile: ${{ parameters.mavenPOMFile }}
+              mavenVersionOption: Default
+              mavenOptions: '-Xmx3072m'
+
+
+          - task: PublishTestResults@2
+            inputs: 
+              testResultsFormat: JUnit
+              testResultsFiles: ${{ parameters.testResultsFiles }}
+
+
+
+        
